@@ -445,6 +445,8 @@ namespace eosio { namespace hotstuff {
 
 		bool signature_required = am_finalizer && node_safe;
 
+		std::vector<hs_vote_message> msgs;
+			
 		if (signature_required){
 				
 			//iterate over all my finalizers and sign / broadcast for each that is in the schedule
@@ -466,7 +468,9 @@ namespace eosio { namespace hotstuff {
 							("phase_counter", proposal.phase_counter)
 							("proposal_id", proposal.proposal_id));*/
 
-					send_hs_vote_msg(v_msg);
+					//send_hs_vote_msg(v_msg);
+
+					msgs.push_back(v_msg);
 
 				};
 
@@ -484,6 +488,10 @@ namespace eosio { namespace hotstuff {
 
 		//update internal state
 		update(proposal);
+
+		for (auto &msg : msgs){
+			send_hs_vote_msg(msg);
+		}
 
 		//check for leader change
 		leader_rotation_check();
@@ -563,9 +571,10 @@ namespace eosio { namespace hotstuff {
 					//if (_log) ilog(" === ${id} setting _pending_proposal_block to null (process_vote)", ("id", _id));
 					_pending_proposal_block = NULL_BLOCK_ID;
 
+					_b_leaf = proposal_candidate.proposal_id;
+
 					send_hs_proposal_msg(proposal_candidate);
 
-					_b_leaf = proposal_candidate.proposal_id;
 
 					//if (_log) ilog(" === ${id} _b_leaf updated (process_vote): ${proposal_id}", ("proposal_id", proposal_candidate.proposal_id)("id", _id));
 
@@ -741,9 +750,9 @@ try{
 
 				_pending_proposal_block = NULL_BLOCK_ID;
 				
-				send_hs_proposal_msg(proposal_candidate);
-
 				_b_leaf = proposal_candidate.proposal_id;
+
+				send_hs_proposal_msg(proposal_candidate);
 
 				//if (_log) ilog(" === ${id} _b_leaf updated (on_beat): ${proposal_id}", ("proposal_id", proposal_candidate.proposal_id)("id", _id));
 
